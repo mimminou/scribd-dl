@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Scribd Dwonloader</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+	<div class="maindiv">
+		<h1>URL</h1>
+		<input type="text" id="urlInput" placeholder="scribd url">
+		<button id="runBtn">Run</button>
+		<p id="status"></p>
+		<progress id="progressBar" value="0" max="100" style="width: 300px;"></progress>
+		<p id="progressText"></p>
+
+	</div>
+
+	<script>
+		const btn = document.getElementById('runBtn');
+		const status = document.getElementById('status');
+		const progressBar = document.getElementById('progressBar');
+		const progressText = document.getElementById('progressText');
+
+		btn.addEventListener('click', async () => {
+			const url = document.getElementById('urlInput').value;
+			if (!url) return alert('Enter a URL');
+
+			status.textContent = 'Running...';
+
+			// start polling
+			intervalId = setInterval(async () => {
+				const res = await fetch('progress');
+				const data = await res.json();
+				progressBar.value = data.progress;
+				if (data.progress === 100) {
+					status.textContent = "Compiling file..."
+				}
+				progressText.textContent = data.progress + '%';
+			}, 500);
+
+			try {
+				const res = await fetch('run', {
+					method: 'POST',
+					headers: {'Content-Type': 'application/json'},
+					body: JSON.stringify({url})
+				});
+
+				if (!res.ok) throw new Error('Error running script');
+
+				const blob = await res.blob();
+				const link = document.createElement('a');
+				link.href = URL.createObjectURL(blob);
+				link.download = 'result.json'; // name of the returned file
+				link.click();
+
+				status.textContent = 'Done!';
+			} catch (e) {
+				status.textContent = 'Failed: ' + e.message;
+			}
+			finally {
+				clearInterval(intervalId); // stop polling when done
+				progressBar.value = 0;
+				progressText.textContent = '0%';
+			}
+		});
+	</script>
+</body>
+
+</html>

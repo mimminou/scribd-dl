@@ -15,11 +15,7 @@ class PuppeteerSg {
    * Launch a browser
    */
   async launch() {
-    const isCI = process.env.CI === 'true'; // Detect if running in CI
-    const args = [];
-    if (isCI) {
-      args.push('--no-sandbox', '--disable-setuid-sandbox');
-    }
+    const args = ['--no-sandbox', '--disable-setuid-sandbox'];
     this.browser = await puppeteer.launch({
       headless: "new",
       defaultViewport: null,
